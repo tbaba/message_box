@@ -1,17 +1,36 @@
 var MessageBox = React.createClass({
   getInitialState: function() {
-    return {
-      messages: [
-        { id: 1, user: '馬場', text: 'ほげえええええ' },
-        { id: 2, user: '達郎', text: 'まさかの本名プレイ' }
-      ]
-    }
+    return { messages: [], isLoading: true }
+  },
+
+  componentDidMount: function() {
+    $.ajax({
+      url: this.props.url,
+      dataType: 'json',
+      cache: false,
+      success: function(messages) {
+        this.setState({ messages: messages, isLoading: false });
+      }.bind(this),
+      error: function(_xhr, status, error) {
+        console.error(this.props.url, status, error.toString());
+      }.bind(this)
+    })
   },
 
   handleMessageSubmit: function(message) {
-    message.id = new Date();
-    var newMessage = this.state.messages.concat(message);
-    this.setState({ messages: newMessage });
+    $.ajax({
+      url: this.props.url,
+      dataType: 'json',
+      type: 'POST',
+      data: message,
+      success: function(message) {
+        var newMessage = this.state.messages.concat(message);
+        this.setState({ messages: newMessage });
+      }.bind(this),
+      error: function(_xhr, status, error) {
+        console.error(this.props.url, status, err.toString());
+      }.bind(this)
+    });
   },
 
   render: function() {
@@ -21,11 +40,17 @@ var MessageBox = React.createClass({
       );
     });
 
-    return (
-      <div className="messageBox">
-        {messageItems}
-        <MessageForm onMessageSubmit={this.handleMessageSubmit} />
-      </div>
-    );
+    if (this.state.isLoading) {
+      return (
+        <div>ロード中...</div>
+      );
+    } else {
+      return (
+        <div className="messageBox">
+          {messageItems}
+          <MessageForm onMessageSubmit={this.handleMessageSubmit} />
+        </div>
+      );
+    }
   }
 });
